@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>わ・を Listening Quiz</title>
+
+<style>
+body{
+  font-family:"Hiragino Kaku Gothic Pro","Meiryo",sans-serif;
+  text-align:center;
+  padding:30px;
+}
+h1{color:#b23b3b}
+
+button{
+  font-size:18px;
+  padding:12px 20px;
+  margin:8px;
+  border-radius:12px;
+  cursor:pointer;
+  transition:.3s;
+}
+
+#playSound{
+  background:white;
+  color:#b23b3b;
+  border:3px solid #b23b3b;
+}
+#playSound:hover{background:#ffe6f2}
+
+.choice{
+  background:#b23b3b;
+  color:white;
+  border:2px solid #b23b3b;
+}
+.choice:hover{background:#ff4da6}
+
+#choices{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  max-width:820px;
+  margin:auto;
+}
+
+#result{
+  font-size:20px;
+  margin-top:20px;
+  white-space:pre-line;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎧 わ・を クイズ</h1>
+
+<button id="playSound">▶️ Play Audio</button>
+
+<div id="choices"></div>
+<div id="result"></div>
+
+<script>
+/* ================= AUDIO ================= */
+
+// 👉 replace later with your GitHub raw path
+const AUDIO_BASE =
+"https://raw.githubusercontent.com/k58835032-notbot/lesson-12-quiz-5/main/audio/";
+
+
+let audio = new Audio();
+
+/* ================= DATA ================= */
+
+const items = [
+  {jp:"わたし", meaning:"I", audio:"watashi.mp3"},
+  {jp:"わかる", meaning:"to understand", audio:"wakaru.mp3"},
+  {jp:"わからない", meaning:"don’t understand", audio:"wakaranai.mp3"},
+  {jp:"わるい", meaning:"bad", audio:"warui.mp3"},
+  {jp:"わすれる", meaning:"to forget", audio:"wasureru.mp3"},
+  {jp:"わらう", meaning:"to laugh", audio:"warau.mp3"},
+  {jp:"わらい", meaning:"laughter", audio:"warai.mp3"},
+
+  {jp:"ゆびわ", meaning:"ring / circle", audio:"yubiwa.mp3"},
+  {jp:"わに", meaning:"crocodile", audio:"wani.mp3"},
+  {jp:"わし", meaning:"eagle / rough I", audio:"washi.mp3"},
+  {jp:"わかめ", meaning:"seaweed", audio:"wakame.mp3"},
+  {jp:"わた", meaning:"cotton", audio:"wata.mp3"},
+  {jp:"わな", meaning:"trap", audio:"wana.mp3"},
+  {jp:"わく", meaning:"to boil / excited", audio:"waku.mp3"},
+  {jp:"わたす", meaning:"to hand over", audio:"watasu.mp3"},
+  {jp:"わかれる", meaning:"to separate", audio:"wakareru.mp3"},
+  {jp:"われる", meaning:"to break", audio:"wareru.mp3"},
+
+  {jp:"わかい", meaning:"young", audio:"wakai.mp3"},
+  {jp:"わずか", meaning:"a little", audio:"wazuka.mp3"},
+  {jp:"わりと", meaning:"relatively", audio:"warito.mp3"},
+  {jp:"わざと", meaning:"on purpose", audio:"wazato.mp3"},
+
+  {jp:"ほん を よむ。", meaning:"read a book", audio:"hon o yomu.mp3"},
+  {jp:"みず を のむ。", meaning:"drink water", audio:"mizu o nomu.mp3"},
+  {jp:"ごはん を たべる。", meaning:"eat a meal", audio:"gohan o taberu.mp3"},
+  {jp:"え を かく。", meaning:"draw a picture", audio:"e o kaku.mp3"},
+  {jp:"て を あらう。", meaning:"wash hands", audio:"te o arau.mp3"},
+  {jp:"くつ を はく。", meaning:"put on shoes", audio:"kutsu o haku.mp3"},
+  {jp:"かばん を もつ。", meaning:"carry a bag", audio:"kaban o motsu.mp3"},
+  {jp:"どあ を あける。", meaning:"open the door", audio:"doa o akeru.mp3"},
+  {jp:"まど を しめる。", meaning:"close the window", audio:"mado o shimeru.mp3"},
+  {jp:"りんご を たべる。", meaning:"eat an apple", audio:"ringo o taberu.mp3"},
+  {jp:"ぱん を かう。", meaning:"buy bread", audio:"pan o kau.mp3"},
+  {jp:"てれび を みる。", meaning:"watch TV", audio:"terebi o miru.mp3"},
+  {jp:"おんがく を きく。", meaning:"listen to music", audio:"ongaku o kiku.mp3"},
+  {jp:"えき を でる。", meaning:"leave station", audio:"eki o deru.mp3"},
+  {jp:"みち を あるく。", meaning:"walk on road", audio:"michi o aruku.mp3"}
+];
+
+/* ================= DISTRACTORS ================= */
+
+const WA_REP = ["ね","れ","ゆ"];
+const WO_REP = ["ち","ろ","お","さ"];
+
+function makeDistractors(correct){
+  const set = new Set();
+  WA_REP.forEach(r=>{
+    if(correct.includes("わ")) set.add(correct.replace(/わ/g,r));
+  });
+  WO_REP.forEach(r=>{
+    if(correct.includes("を")) set.add(correct.replace(/を/g,r));
+  });
+  return [...set].slice(0,3);
+}
+
+/* ================= QUIZ ================= */
+
+let current;
+let count=0;
+const maxQ=25;
+
+const choicesDiv=document.getElementById("choices");
+const resultDiv=document.getElementById("result");
+const playBtn=document.getElementById("playSound");
+
+playBtn.onclick=()=>{
+  if(!current) return;
+  audio.src=AUDIO_BASE+current.audio;
+  audio.currentTime=0;
+  audio.play().catch(()=>alert("Audio not found"));
+};
+
+function newQuestion(){
+  if(count>=maxQ){
+    resultDiv.textContent="🎉 Finished!";
+    choicesDiv.innerHTML="";
+    return;
+  }
+
+  count++;
+  current=items[Math.floor(Math.random()*items.length)];
+  choicesDiv.innerHTML="";
+  resultDiv.textContent=`Q ${count} / ${maxQ}`;
+
+  const options=[...makeDistractors(current.jp),current.jp]
+    .sort(()=>Math.random()-0.5);
+
+  options.forEach(o=>{
+    const b=document.createElement("button");
+    b.className="choice";
+    b.textContent=o;
+    b.onclick=()=>check(o);
+    choicesDiv.appendChild(b);
+  });
+}
+
+function check(ans){
+  if(ans===current.jp){
+    resultDiv.textContent=`⭕ Correct!\n${current.jp}\n${current.meaning}`;
+  }else{
+    resultDiv.textContent=`❌ Wrong!\nCorrect: ${current.jp}\n${current.meaning}`;
+  }
+  setTimeout(newQuestion,1500);
+}
+
+newQuestion();
+</script>
+
+</body>
+</html>
